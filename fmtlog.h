@@ -714,6 +714,25 @@ public:
       q_full_cb = false;
     } while (FMTLOG_BLOCK);
   }
+
+  inline void logOnce(const char* location, LogLevel level, fmt::string_view formatted) {
+      uint32_t alloc_size = 8 + 8 + formatted.size();
+      bool q_full_cb = true;
+      do {
+          if (auto header = allocMsg(alloc_size, q_full_cb)) {
+              header->logId = (uint32_t)level;
+              char* out = (char*)(header + 1);
+              *(int64_t*)out = tscns.rdtsc();
+              out += 8;
+              *(const char**)out = location;
+              out += 8;
+              memcpy(out, formatted.data(), formatted.size());
+              header->push(alloc_size);
+              break;
+          }
+          q_full_cb = false;
+      } while (FMTLOG_BLOCK);
+  }
 };
 
 using fmtlog = fmtlogT<>;

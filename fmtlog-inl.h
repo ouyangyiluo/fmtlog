@@ -132,8 +132,8 @@ public:
       "YmdHMSF"_a = "");
     shouldDeallocateHeader = headerPattern.data() != pattern;
 
-    setArg<0>(fmt::string_view(weekdayName.s, 3));
-    setArg<1>(fmt::string_view(monthName.s, 3));
+    setArg<0>(fmt::string_view(weekdayName.s, 4));
+    setArg<1>(fmt::string_view(monthName.s, 4));
     setArg<2>(fmt::string_view(&year[2], 2));
     setArg<3>(fmt::string_view(year.s, 4));
     setArg<4>(fmt::string_view(month.s, 2));
@@ -145,7 +145,7 @@ public:
     setArg<10>(fmt::string_view(second.s, 2));
     setArg<11>(fmt::string_view(minute.s, 2));
     setArg<12>(fmt::string_view(hour.s, 2));
-    setArg<13>(fmt::string_view(logLevel.s, 3));
+    setArg<13>(fmt::string_view(logLevel.s, 4));
     setArg<14>(fmt::string_view());
     setArg<15>(fmt::string_view());
     setArg<16>(fmt::string_view(year.s, 10)); // Ymd
@@ -250,8 +250,8 @@ public:
 
   const static int parttenArgSize = 25;
   uint32_t reorderIdx[parttenArgSize];
-  Str<3> weekdayName;
-  Str<3> monthName;
+  Str<4> weekdayName;
+  Str<4> monthName;
   Str<4> year;
   char dash1 = '-';
   Str<2> month;
@@ -265,7 +265,7 @@ public:
   Str<2> second;
   char dot1 = '.';
   Str<9> nanosecond;
-  Str<3> logLevel;
+  Str<4> logLevel;
   std::vector<fmt::basic_format_arg<fmtlog::Context>> args;
 
   volatile bool threadRunning = false;
@@ -279,9 +279,9 @@ public:
     year.fromi(1900 + timeinfo->tm_year);
     month.fromi(1 + timeinfo->tm_mon);
     day.fromi(timeinfo->tm_mday);
-    const char* weekdays[7] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+    const char* weekdays[7] = { "周日", "周一", "周二", "周三", "周四", "周五", "周六" };
     weekdayName = weekdays[timeinfo->tm_wday];
-    const char* monthNames[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+    const char* monthNames[12] = {"一月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "11月", "12月"};
     monthName = monthNames[timeinfo->tm_mon];
   }
 
@@ -373,7 +373,7 @@ public:
     t /= 60;
     minute.fromi(t % 60);
     t /= 60;
-    uint32_t h = t; // hour
+    uint32_t h = static_cast<uint32_t>(t);// hour
     if (h > 23) {
       h %= 24;
       resetDate();
@@ -381,8 +381,9 @@ public:
     hour.fromi(h);
     setArgVal<14>(info.getBase());
     setArgVal<15>(info.getLocation());
-    logLevel = (const char*)"DBG INF WRN ERR OFF" + (info.logLevel << 2);
-
+    //logLevel = (const char*)"DBG INF WRN ERR OFF" + (info.logLevel << 2);
+    logLevel = (const char*)"调试 信息 警告 错误 关闭"  + (info.logLevel * (logLevel.Size + 1));
+    
     size_t headerPos = membuf.size();
     fmtlog::vformat_to(membuf, headerPattern, fmt::basic_format_args(args.data(), parttenArgSize));
     size_t bodyPos = membuf.size();
